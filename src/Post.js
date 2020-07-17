@@ -16,6 +16,7 @@ import Button from "@material-ui/core/Button";
 import { AuthContext } from "./authContext";
 import { CopyBlock, dracula } from "react-code-blocks";
 import useDimensions from "react-use-dimensions";
+import TextField from "@material-ui/core/TextField";
 
 const POST = gql`
   query fivegcovidpost($slug: String!) {
@@ -32,8 +33,10 @@ const POST = gql`
 `;
 
 const UPDATEPOST = gql`
-  mutation($id: ID!, $body: String!) {
-    updateFivegcovidpost(input: { where: { id: $id }, data: { Body: $body } }) {
+  mutation($id: ID!, $body: String!, $Title: String!) {
+    updateFivegcovidpost(
+      input: { where: { id: $id }, data: { Body: $body, Title: $Title } }
+    ) {
       fivegcovidpost {
         slug
         Title
@@ -91,7 +94,7 @@ const Post = ({ slug, setImage }) => {
       slug: slug.toUpperCase(),
     },
   });
-
+  const [title, setTitle] = useState("");
   const [markdown, setMarkdown] = useState("");
   const [edit, setEdit] = useState(false);
   const [selectedTab, setSelectedTab] = React.useState("write");
@@ -102,6 +105,7 @@ const Post = ({ slug, setImage }) => {
   useEffect(() => {
     if (data) {
       setMarkdown(post.Body);
+      setTitle(post.Title);
     }
   }, [data]);
 
@@ -112,7 +116,14 @@ const Post = ({ slug, setImage }) => {
     <>
       <Container flex>
         <Typography ref={ref} variant="h1" paragraph>
-          {post.Title}
+          {edit ? (
+            <TextField
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+            />
+          ) : (
+            title
+          )}
         </Typography>
 
         <Grid
@@ -130,7 +141,7 @@ const Post = ({ slug, setImage }) => {
                   disabled={!edit}
                   onClick={() => {
                     updatePost({
-                      variables: { body: markdown, id: post.id },
+                      variables: { body: markdown, id: post.id, Title: title },
                     });
                   }}
                 >
