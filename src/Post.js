@@ -73,13 +73,14 @@ const UPDATEPOSTWITHIMAGE = gql`
 `;
 
 const CREATE = gql`
-  mutation($id: ID!, $body: String!, $Title: String!, $image: ID!) {
+  mutation($body: String!, $Title: String!, $image: ID!, $slug: String!) {
+    createFivegcovidpost(
+      input: {
+        data: { slug: $slug, Title: $Title, image: $image, Body: $body }
+      }
+    ) {
       fivegcovidpost {
-        slug
-        Title
         id
-        image 
-        Body
       }
     }
   }
@@ -143,10 +144,12 @@ const Post = ({ slug }) => {
   const [edit, setEdit] = useState(false);
   const [selectedTab, setSelectedTab] = useState("write");
   const [updatePost] = useMutation(UPDATEPOST);
+  const [createPost] = useMutation(CREATE);
   const [uploadImage] = useMutation(UPLOADIMAGE);
   const [updatePostWithImage] = useMutation(UPDATEPOSTWITHIMAGE);
   const [image, setImage] = useState();
   const [newImage, setNewImage] = useState();
+  const [newpost, setNewPost] = useState(false);
   const onDrop = useCallback((acceptedFiles) => {
     acceptedFiles.forEach((file) => {
       setNewImage(file);
@@ -160,13 +163,31 @@ const Post = ({ slug }) => {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
   const update = useCallback(async () => {
-    if (newImage) {
+    if (newpost) {
       const uploadedimg = await uploadImage({
         variables: {
           file: newImage,
         },
       });
-      console.log({ uploadedimg });
+
+      const ID = uploadedimg.data.upload.id;
+
+      createPost({
+        variables: {
+          body: markdown,
+          Title: title,
+          image: ID,
+          slug,
+        },
+      });
+      setNewPost(false);
+    } else if (newImage) {
+      const uploadedimg = await uploadImage({
+        variables: {
+          file: newImage,
+        },
+      });
+
       const ID = uploadedimg.data.upload.id;
       updatePostWithImage({
         variables: {
@@ -174,7 +195,6 @@ const Post = ({ slug }) => {
           id: post.id,
           Title: title,
           image: ID,
-          slug,
         },
       });
     } else {
@@ -201,6 +221,8 @@ const Post = ({ slug }) => {
       setMarkdown(post.Body);
       setTitle(post.Title);
       setImage(`https://cms2.caseytimm.com${post.image.url}`);
+      if (data.fivegcovidposts.length == 0) setNewPost(true);
+      else setNewPost(false);
     }
   }, [data]);
 
