@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useCallback } from "react";
 import { Link } from "@reach/router";
 import ReactMarkdown from "react-markdown";
 import { Typography, Container } from "@material-ui/core";
@@ -17,6 +17,7 @@ import { AuthContext } from "./authContext";
 import { CopyBlock, dracula } from "react-code-blocks";
 import useDimensions from "react-use-dimensions";
 import TextField from "@material-ui/core/TextField";
+import { useDropzone } from "react-dropzone";
 
 const POST = gql`
   query fivegcovidpost($slug: String!) {
@@ -46,6 +47,36 @@ const UPDATEPOST = gql`
         }
         Body
       }
+    }
+  }
+`;
+
+const UPDATEPOSTWITHIMAGE = gql`
+  mutation($id: ID!, $body: String!, $Title: String!, $image: ID!) {
+    updateFivegcovidpost(
+      input: {
+        where: { id: $id }
+        data: { Body: $body, Title: $Title, image: $image }
+      }
+    ) {
+      fivegcovidpost {
+        slug
+        Title
+        id
+        image {
+          url
+        }
+        Body
+      }
+    }
+  }
+`;
+
+const UPLOADIMAGE = gql`
+  mutation($file: Upload!) {
+    upload(file: $file) {
+      name
+      id
     }
   }
 `;
@@ -86,7 +117,7 @@ const MarkdownViewer = ({ content }) => (
   />
 );
 
-const Post = ({ slug, setImage }) => {
+const Post = ({ slug }) => {
   const [ref, { x, y, width }] = useDimensions();
   const { authenticated } = useContext(AuthContext);
   const { loading, error, data } = useQuery(POST, {
@@ -97,8 +128,52 @@ const Post = ({ slug, setImage }) => {
   const [title, setTitle] = useState("");
   const [markdown, setMarkdown] = useState("");
   const [edit, setEdit] = useState(false);
-  const [selectedTab, setSelectedTab] = React.useState("write");
-  const [updatePost, { mutatedData }] = useMutation(UPDATEPOST);
+  const [selectedTab, setSelectedTab] = useState("write");
+  const [updatePost] = useMutation(UPDATEPOST);
+  const [uploadImage] = useMutation(UPLOADIMAGE);
+  const [updatePostWithImage] = useMutation(UPDATEPOSTWITHIMAGE);
+  const [image, setImage] = useState();
+  const [newImage, setNewImage] = useState();
+  const onDrop = useCallback((acceptedFiles) => {
+    acceptedFiles.forEach((file) => {
+      setNewImage(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    });
+  }, []);
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
+
+  const update = useCallback(async () => {
+    if (newImage) {
+      const uploadedimg = await uploadImage({
+        variables: {
+          file: newImage,
+        },
+      });
+      console.log({ uploadedimg });
+      const ID = uploadedimg.data.upload.id;
+      updatePostWithImage({
+        variables: {
+          body: markdown,
+          id: post.id,
+          Title: title,
+          image: ID,
+        },
+      });
+    } else {
+      updatePost({
+        variables: {
+          body: markdown,
+          id: post.id,
+          Title: title,
+        },
+      });
+    }
+    setEdit(false);
+  });
 
   const post = data ? data.fivegcovidposts[0] : undefined;
 
@@ -106,6 +181,7 @@ const Post = ({ slug, setImage }) => {
     if (data) {
       setMarkdown(post.Body);
       setTitle(post.Title);
+      setImage(`https://cms2.caseytimm.com${post.image.url}`);
     }
   }, [data]);
 
@@ -139,11 +215,7 @@ const Post = ({ slug, setImage }) => {
                   variant="contained"
                   color="primary"
                   disabled={!edit}
-                  onClick={() => {
-                    updatePost({
-                      variables: { body: markdown, id: post.id, Title: title },
-                    });
-                  }}
+                  onClick={update}
                 >
                   Save
                 </Button>
@@ -163,10 +235,14 @@ const Post = ({ slug, setImage }) => {
             )}
           </Grid>
         </Grid>
-        <img
-          width={width}
-          src={`https://cms2.caseytimm.com${post.image.url}`}
-        />
+        {edit ? (
+          <div {...getRootProps()}>
+            <input {...getInputProps()} />
+            <img width={width} src={image} />
+          </div>
+        ) : (
+          <img width={width} src={image} />
+        )}
         {authenticated && edit ? (
           <ReactMde
             value={markdown}
