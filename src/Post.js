@@ -72,6 +72,19 @@ const UPDATEPOSTWITHIMAGE = gql`
   }
 `;
 
+const CREATE = gql`
+  mutation($id: ID!, $body: String!, $Title: String!, $image: ID!) {
+      fivegcovidpost {
+        slug
+        Title
+        id
+        image 
+        Body
+      }
+    }
+  }
+`;
+
 const UPLOADIMAGE = gql`
   mutation($file: Upload!) {
     upload(file: $file) {
@@ -161,6 +174,7 @@ const Post = ({ slug }) => {
           id: post.id,
           Title: title,
           image: ID,
+          slug,
         },
       });
     } else {
@@ -169,13 +183,18 @@ const Post = ({ slug }) => {
           body: markdown,
           id: post.id,
           Title: title,
+          slug,
         },
       });
     }
     setEdit(false);
   });
 
-  const post = data ? data.fivegcovidposts[0] : undefined;
+  const post = data
+    ? data.fivegcovidposts[0]
+      ? data.fivegcovidposts[0]
+      : { Body: "", Title: "", image: "", slug }
+    : { Body: "", Title: "", image: "", slug };
 
   useEffect(() => {
     if (data) {
