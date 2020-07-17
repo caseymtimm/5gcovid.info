@@ -7,6 +7,8 @@ import AuthProvider from "./authContext";
 import Banner from "./Banner";
 import Footer from "./Footer";
 import { Grid } from "@material-ui/core";
+import { Router, Link, Location } from "@reach/router";
+import Post from "./Post";
 
 const client = new ApolloClient({
   uri: "https://cms2.caseytimm.com/graphql",
@@ -35,9 +37,12 @@ function App() {
   return (
     <Grid container>
       <Grid item md={3} />
-      <Grid md={6}>
+      <Grid item md={6}>
         <Banner />
-        <Posts />
+        <Router>
+          <Posts path="/" />
+          <Post path="/post/:slug" />
+        </Router>
         <Footer />
       </Grid>
       <Grid item md={3} />
