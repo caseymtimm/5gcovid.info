@@ -177,7 +177,7 @@ const Post = ({ slug }) => {
           body: markdown,
           Title: title,
           image: ID,
-          slug,
+          slug: slug.toUpperCase(),
         },
       });
       setNewPost(false);
