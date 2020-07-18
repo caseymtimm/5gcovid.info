@@ -19,6 +19,7 @@ import useDimensions from "react-use-dimensions";
 import TextField from "@material-ui/core/TextField";
 import { useDropzone } from "react-dropzone";
 import Modal from "@material-ui/core/Modal";
+import Largeinput from "./components/Largeinput";
 
 const POST = gql`
   query fivegcovidpost($slug: String!) {
@@ -247,7 +248,7 @@ const Post = ({ slug }) => {
       <Container flex>
         <Typography ref={ref} variant="h1" paragraph>
           {edit ? (
-            <TextField
+            <Largeinput
               value={title}
               onChange={(event) => setTitle(event.target.value)}
             />
@@ -264,7 +265,7 @@ const Post = ({ slug }) => {
         >
           <Grid item>
             {authenticated && (
-              <FormGroup>
+              <FormGroup row>
                 <Button
                   variant="contained"
                   color="primary"
