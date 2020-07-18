@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext, useCallback } from "react";
-import { Link } from "@reach/router";
+import { navigate } from "@reach/router";
 import ReactMarkdown from "react-markdown";
-import { Typography, Container } from "@material-ui/core";
+import { Typography, Container, Paper } from "@material-ui/core";
 import { gql } from "apollo-boost";
 import { useQuery, useMutation } from "@apollo/react-hooks";
 import MediaBox from "./mediabox";
@@ -18,6 +18,7 @@ import { CopyBlock, dracula } from "react-code-blocks";
 import useDimensions from "react-use-dimensions";
 import TextField from "@material-ui/core/TextField";
 import { useDropzone } from "react-dropzone";
+import Modal from "@material-ui/core/Modal";
 
 const POST = gql`
   query fivegcovidpost($slug: String!) {
@@ -95,6 +96,16 @@ const UPLOADIMAGE = gql`
   }
 `;
 
+const DELETEPOST = gql`
+  mutation($id: ID!) {
+    deleteFivegcovidpost(input: { where: { id: $id } }) {
+      fivegcovidpost {
+        id
+      }
+    }
+  }
+`;
+
 const MarkdownViewer = ({ content }) => (
   <ReactMarkdown
     source={content}
@@ -145,6 +156,8 @@ const Post = ({ slug }) => {
   const [selectedTab, setSelectedTab] = useState("write");
   const [updatePost] = useMutation(UPDATEPOST);
   const [createPost] = useMutation(CREATE);
+  const [deletePost] = useMutation(DELETEPOST);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [uploadImage] = useMutation(UPLOADIMAGE);
   const [updatePostWithImage] = useMutation(UPDATEPOSTWITHIMAGE);
   const [image, setImage] = useState();
@@ -260,6 +273,35 @@ const Post = ({ slug }) => {
                 >
                   Save
                 </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  disabled={!edit}
+                  onClick={() => {
+                    setDeleteOpen(true);
+                  }}
+                >
+                  Delete
+                </Button>
+
+                <Modal
+                  open={deleteOpen}
+                  onClose={() => setDeleteOpen(false)}
+                  aria-labelledby="simple-modal-title"
+                  aria-describedby="simple-modal-description"
+                >
+                  <Paper>
+                    <p>Are you sure?</p>
+                    <Button
+                      onClick={async () => {
+                        await deletePost({ variables: { id: post.id } });
+                        navigate("/");
+                      }}
+                    >
+                      DELETE
+                    </Button>
+                  </Paper>
+                </Modal>
                 <FormControlLabel
                   control={
                     <Switch
