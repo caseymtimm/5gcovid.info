@@ -11,6 +11,7 @@ import { Grid } from "@material-ui/core";
 import { Router, Link, Location } from "@reach/router";
 import Post from "./Post";
 import { setContext } from "@apollo/client/link/context";
+import Toast from "./Toast.js";
 
 const httpLink = createUploadLink({
   uri: "https://cms2.caseytimm.com/graphql",
@@ -56,18 +57,21 @@ const Wrapper = (props) => (
 
 function App() {
   return (
-    <Grid container>
-      <Grid item md={3} />
-      <Grid item md={6}>
-        <Banner />
-        <Router>
-          <Posts path="/" />
-          <Post path="/post/:slug" />
-        </Router>
-        <Footer />
+    <>
+      <Grid container>
+        <Grid item md={3} />
+        <Grid item md={6}>
+          <Banner />
+          <Router>
+            <Posts path="/" />
+            <Post path="/post/:slug" />
+          </Router>
+          <Footer />
+        </Grid>
+        <Grid item md={3} />
       </Grid>
-      <Grid item md={3} />
-    </Grid>
+      <Toast />
+    </>
   );
 }
 
