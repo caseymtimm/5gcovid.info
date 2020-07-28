@@ -12,6 +12,14 @@ import { Router, Link, Location } from "@reach/router";
 import Post from "./Post";
 import { setContext } from "@apollo/client/link/context";
 import Toast from "./Toast.js";
+import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles";
+import CssBaseline from "@material-ui/core/CssBaseline";
+
+const darkTheme = createMuiTheme({
+  palette: {
+    type: "dark",
+  },
+});
 
 const httpLink = createUploadLink({
   uri: "https://cms2.caseytimm.com/graphql",
@@ -57,7 +65,8 @@ const Wrapper = (props) => (
 
 function App() {
   return (
-    <>
+    <ThemeProvider theme={darkTheme}>
+      <CssBaseline />
       <Grid container>
         <Grid item md={3} />
         <Grid item md={6}>
@@ -71,7 +80,7 @@ function App() {
         <Grid item md={3} />
       </Grid>
       <Toast />
-    </>
+    </ThemeProvider>
   );
 }
 
