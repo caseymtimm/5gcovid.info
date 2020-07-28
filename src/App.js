@@ -14,10 +14,17 @@ import { setContext } from "@apollo/client/link/context";
 import Toast from "./Toast.js";
 import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles";
 import CssBaseline from "@material-ui/core/CssBaseline";
+import useMediaQuery from "@material-ui/core/useMediaQuery";
 
 const darkTheme = createMuiTheme({
   palette: {
     type: "dark",
+  },
+});
+
+const lightTheme = createMuiTheme({
+  palette: {
+    type: "light",
   },
 });
 
@@ -64,8 +71,10 @@ const Wrapper = (props) => (
 );
 
 function App() {
+  const matches = useMediaQuery("(prefers-color-scheme: dark)");
+  const theme = matches ? darkTheme : lightTheme;
   return (
-    <ThemeProvider theme={darkTheme}>
+    <ThemeProvider theme={theme}>
       <CssBaseline />
       <Grid container>
         <Grid item md={3} />
